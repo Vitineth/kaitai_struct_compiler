@@ -20,6 +20,14 @@ languages. These modules will include the generated code for a parser
 that can read described data structure from a file / stream and give
 access to it in a nice, easy-to-comprehend API.
 
+## Fork Status
+
+This fork integrates a few tweak on the HTML renderer to make the documentation slightly more functional for a reference viewer. These are:
+
+* Support for Markdown in any `doc:` component
+* Wrap data types in code blocks for increased readability
+* Where possible, output field sizes so tables can be followed more easily
+
 ## Further information
 
 If you're looking for information on:
