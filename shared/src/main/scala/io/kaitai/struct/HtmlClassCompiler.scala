@@ -57,7 +57,7 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
     out.puts
 
     classSpec.doc.summary.foreach(summary =>
-      out.puts(s"<p>$summary</p>")
+      out.puts(s"<p>${Platform.markdownToHtml(summary)}</p>")
     )
     out.inc
   }
@@ -81,7 +81,7 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
     out.puts(s"<td>...</td>")
     out.puts(s"<td>${attr.id.humanReadable}</td>")
     out.puts(s"<td>${kaitaiType2NativeType(attr.dataType)}</td>")
-    out.puts(s"<td>${attr.doc.summary.getOrElse("")}</td>")
+    out.puts(s"<td>${Platform.markdownToHtml(attr.doc.summary.getOrElse(""))}</td>")
     out.puts("</tr>")
   }
 
@@ -93,7 +93,7 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
     out.puts(s"<td>...</td>")
     out.puts(s"<td>${inst.id.humanReadable}</td>")
     out.puts(s"<td>${kaitaiType2NativeType(inst.dataType)}</td>")
-    out.puts(s"<td>${inst.doc.summary.getOrElse("")}</td>")
+    out.puts(s"<td>${Platform.markdownToHtml(inst.doc.summary.getOrElse(""))}</td>")
     out.puts("</tr>")
     out.puts("</table>")
   }
@@ -114,7 +114,7 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
 
     enumColl.sortedSeq.foreach { case (id, value) =>
       out.puts("<tr>")
-      out.puts(s"<td>$id</td><td>${value.name}</td><td>${value.doc.summary.getOrElse("")}</td></tr>")
+      out.puts(s"<td>$id</td><td>${value.name}</td><td>${Platform.markdownToHtml(value.doc.summary.getOrElse(""))}</td></tr>")
       out.puts("</tr>")
     }
 
