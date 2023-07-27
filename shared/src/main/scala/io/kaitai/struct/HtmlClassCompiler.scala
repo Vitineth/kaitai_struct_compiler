@@ -92,7 +92,7 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
     }
 //    out.puts(s"<td>...</td>")
     out.puts(s"<td>${attr.id.humanReadable}</td>")
-    out.puts(s"<td>${kaitaiType2NativeType(attr.dataType)}</td>")
+    out.puts(s"<td><code>${kaitaiType2NativeType(attr.dataType)}</code></td>")
     out.puts(s"<td>${Platform.markdownToHtml(attr.doc.summary.getOrElse(""))}</td>")
     out.puts("</tr>")
   }
