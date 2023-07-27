@@ -78,7 +78,19 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
   override def compileSeqAttr(classSpec: ClassSpec, attr: AttrSpec, seqPos: Option[Int], sizeElement: Sized, sizeContainer: Sized): Unit = {
     out.puts("<tr>")
     out.puts(s"<td>${GraphvizClassCompiler.seqPosToStr(seqPos).getOrElse("???")}</td>")
-    out.puts(s"<td>...</td>")
+    sizeElement match {
+      case DynamicSized => out.puts(s"<td>dyn</td>")
+      case FixedSized(n) => {
+        if (n > 8 && n % 8 == 0){
+          out.puts(s"<td>${n / 8}&nbsp;byte${if (n > 8) "s" else ""}</td>")
+        }else{
+          out.puts(s"<td>${n}&nbsp;bit${if (n > 1) "s" else ""}</td>")
+        }
+      }
+      case NotCalculatedSized => out.puts(s"<td>???</td>")
+      case StartedCalculationSized => out.puts(s"<td>???</td>")
+    }
+//    out.puts(s"<td>...</td>")
     out.puts(s"<td>${attr.id.humanReadable}</td>")
     out.puts(s"<td>${kaitaiType2NativeType(attr.dataType)}</td>")
     out.puts(s"<td>${Platform.markdownToHtml(attr.doc.summary.getOrElse(""))}</td>")
