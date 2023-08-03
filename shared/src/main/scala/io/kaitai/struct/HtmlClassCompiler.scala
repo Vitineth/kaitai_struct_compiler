@@ -5,9 +5,13 @@ import io.kaitai.struct.datatype.DataType.UserType
 import io.kaitai.struct.exprlang.Ast
 import io.kaitai.struct.format._
 import io.kaitai.struct.languages.components.{LanguageCompiler, LanguageCompilerStatic}
+import io.kaitai.struct.translators.{HTMLTranslator, PerlTranslator, PythonTranslator}
 
 class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends DocClassCompiler(classSpecs, topClass) {
+
   import HtmlClassCompiler._
+
+  translator = new HTMLTranslator(provider)
 
   override def outFileName(topClass: ClassSpec): String = s"${topClass.nameAsStr}.html"
 
@@ -16,22 +20,38 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
   override def fileHeader(topClass: ClassSpec): Unit = {
     out.puts(
       s"""
-        |<!doctype html>
-        |<html lang="en">
-        |  <head>
-        |    <!-- Required meta tags -->
-        |    <meta charset="utf-8">
-        |    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        |
-        |    <!-- Bootstrap CSS -->
-        |    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-        |
-        |    <title>${type2str(topClass.name.last)} format specification</title>
-        |  </head>
-        |  <body>
+         |<!doctype html>
+         |<html lang="en">
+         |  <head>
+         |    <!-- Required meta tags -->
+         |    <meta charset="utf-8">
+         |    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+         |
+         |    <!-- Bootstrap CSS -->
+         |    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+         |
+         |    <style>
+         |    pre {
+         |      background: white;
+         |      padding: 7px;
+         |      border: 1px solid #cbafbc;
+         |      box-shadow: rgba(0, 0, 0, 0.06) 0px 2px 4px 0px inset;
+         |    }
+         |
+         |    .pre-wrap{
+         |      display: flex;
+         |      flex-direction: row;
+         |      flex-wrap: wrap;
+         |      justify-content: space-between;
+         |    }
+         |    </style>
+         |
+         |    <title>${type2str(topClass.name.last)} format specification</title>
+         |  </head>
+         |  <body>
            <div class="container">
-        |  <h1>${type2str(topClass.name.last)} format specification</h1>
-        |
+         |  <h1>${type2str(topClass.name.last)} format specification</h1>
+         |
       """.stripMargin)
 
     // TODO: parse & output meta/title, meta/file-extensions, etc
@@ -81,20 +101,50 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
     sizeElement match {
       case DynamicSized => out.puts(s"<td>dyn</td>")
       case FixedSized(n) => {
-        if (n > 8 && n % 8 == 0){
+        if (n > 8 && n % 8 == 0) {
           out.puts(s"<td>${n / 8}&nbsp;byte${if (n > 8) "s" else ""}</td>")
-        }else{
+        } else {
           out.puts(s"<td>${n}&nbsp;bit${if (n > 1) "s" else ""}</td>")
         }
       }
       case NotCalculatedSized => out.puts(s"<td>???</td>")
       case StartedCalculationSized => out.puts(s"<td>???</td>")
     }
-//    out.puts(s"<td>...</td>")
+    //    out.puts(s"<td>...</td>")
     out.puts(s"<td>${attr.id.humanReadable}</td>")
     out.puts(s"<td><code>${kaitaiType2NativeType(attr.dataType)}</code></td>")
-    out.puts(s"<td>${Platform.markdownToHtml(attr.doc.summary.getOrElse(""))}</td>")
+    out.puts(s"<td>${Platform.markdownToHtml(attr.doc.summary.getOrElse("") + validatorToMarkdown(attr))}</td>")
     out.puts("</tr>")
+  }
+
+  def validatorToMarkdown(attr: AttrSpec): String = {
+    /**
+     * If attr.validator is defined, we want to produce an actual output
+     */
+    if (attr.valid.isEmpty) {
+      return ""
+    }
+
+    val header = "\n\n------------------------\n\n**Validation Specification**\n\nThis field must "
+    val spec = attr.valid.get
+    spec match {
+      case ValidationEq(value) => s"${header}satisfy the following constraint: \n\n```\n${attr.id.humanReadable} === ${expression(Some(value))}\n```"
+      case ValidationExpr(checkExpr) => s"${header}satisfy the following constraint: \n\n```\n${expression(Some(checkExpr))}\n```"
+      case ValidationRange(min, max) => s"${header}satisfy the following constraint: \n\n```\n${expression(Some(min))} <= ${attr.id.humanReadable} <= ${expression(Some(max))}\n```"
+      case ValidationAnyOf(values) => s"${header}equal any of the following values: ${validationAnyOfToMarkdown(ValidationAnyOf(values))}"
+      case ValidationMax(max) => s"${header}satisfy the following constraint: \n\n```\n${attr.id.humanReadable} <= ${expression(Some(max))}\n````"
+      case ValidationMin(min) => s"${header}satisfy the following constraint: \n\n```\n${attr.id.humanReadable} >= ${expression(Some(min))}\n````"
+      case _ => s"${header}satisfy an unknown constraint."
+    }
+  }
+
+  def validationAnyOfToMarkdown(valid: ValidationAnyOf): String = {
+    var output = "<div class=\"pre-wrap\">\n"
+    for (elem <- valid.values) {
+      output += s"\n\n```\n${expression(Some(elem))}\n```"
+    }
+    output += "\n</div>"
+    output
   }
 
   override def compileParseInstance(classSpec: ClassSpec, inst: ParseInstanceSpec): Unit = {
@@ -146,9 +196,9 @@ class HtmlClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends Doc
 object HtmlClassCompiler extends LanguageCompilerStatic {
   // FIXME: Unused, should be probably separated from LanguageCompilerStatic
   override def getCompiler(
-    tp: ClassTypeProvider,
-    config: RuntimeConfig
-  ): LanguageCompiler = ???
+                            tp: ClassTypeProvider,
+                            config: RuntimeConfig
+                          ): LanguageCompiler = ???
 
   def type2str(name: String): String = Utils.upperCamelCase(name)
 
