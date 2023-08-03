@@ -27,6 +27,7 @@ This fork integrates a few tweak on the HTML renderer to make the documentation 
 * Support for Markdown in any `doc:` component
 * Wrap data types in code blocks for increased readability
 * Where possible, output field sizes so tables can be followed more easily
+* Documents `valid:` blocks from the specification in the table for `seq` elements and `types` tables.
 
 ## Further information
 
