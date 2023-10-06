@@ -1,4 +1,4 @@
-name: test
+name: compile
 
 on:
   push:
@@ -27,5 +27,5 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
-      - name: Run tests
+      - name: Run build
         run: sbt build
