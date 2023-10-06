@@ -28,4 +28,4 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
       - name: Run build
-        run: sbt build
+        run: sbt compile compilerJVM/stage fastOptJS buildNpmJsFile compilerJVM/universal:packageBin
