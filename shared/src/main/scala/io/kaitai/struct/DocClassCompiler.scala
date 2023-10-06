@@ -2,11 +2,11 @@ package io.kaitai.struct
 
 import io.kaitai.struct.format._
 import io.kaitai.struct.precompile.CalculateSeqSizes
-import io.kaitai.struct.translators.RubyTranslator
+import io.kaitai.struct.translators.{BaseTranslator, RubyTranslator}
 
 abstract class DocClassCompiler(classSpecs: ClassSpecs, topClass: ClassSpec) extends AbstractCompiler {
   val provider = new ClassTypeProvider(classSpecs, topClass)
-  val translator = new RubyTranslator(provider)
+  protected var translator: BaseTranslator = new RubyTranslator(provider)
 
   // TODO: move it into SingleOutputFile equivalent
   val out = new StringLanguageOutputWriter(indent)

@@ -72,15 +72,17 @@ lazy val compiler = crossProject.in(file(".")).
     libraryDependencies ++= Seq(
       "com.github.scopt" %%% "scopt" % "3.6.0",
       "com.lihaoyi" %%% "fastparse" % "1.0.0",
-      "org.yaml" % "snakeyaml" % "1.28"
-    )
+      "org.yaml" % "snakeyaml" % "1.28",
+    ),
   ).
   jvmSettings(
     name := NAME,
 
     Compile / mainClass := Some("io.kaitai.struct.JavaMain"),
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.12" % "test"
+      "org.scalatest" %% "scalatest" % "3.2.12" % "test",
+      "org.commonmark" % "commonmark" % "0.20.0",
+      "org.commonmark" % "commonmark-ext-gfm-tables" % "0.21.0"
     ),
 
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-u", "target/test_out"),
@@ -180,6 +182,7 @@ lazy val compiler = crossProject.in(file(".")).
   ).
   jsSettings(
     name := NAME + "-js",
+    libraryDependencies += "com.github.karasiq" %%% "scalajs-marked" % "1.0.2",
     buildNpmJsFile := buildNpmJsFileTask.value,
     buildNpmPackage := buildNpmPackageTask.value
   )
